@@ -2,28 +2,27 @@ package ExerciseSystemForSecurity
 
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior, Terminated}
-import ExerciseSystemForSecurity.Messages.{AddACL, Command, FailedExercise, Init, Message, Packet, Reply, SendPacket, ShowACL, ShowAll, ShowLog, Start, StopSystem, SuccessExercise}
+import ExerciseSystemForSecurity.Messages.{AddACL, Command, FailedExercise, Init, Message, Packet, Reply, SendPacket, ShowACL, ShowAll, ShowLog, Start, StartMain, StopMain, StopSystem, SuccessExercise, WaitingForInput}
 
 import scala.util.Random
 
 trait ExternalNetwork
 trait InternalNetwork
-trait DMZ
 
 object Messages{
   trait Message
   //Mainアクターに最初に送るメッセージ
-  final case class Start(MainRef: ActorRef[Message]) extends Message
+  final case class Start(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message]) extends Message
   //各アクターに初期情報を送るメッセージ
-  final case class Init(MainRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
+  final case class Init(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message], ReceptionRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
   //外部Webサーバにパケットを送信させるメッセージ
   final case class SendPacket(Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
   //通信パケットに見立てたメッセージ
   final case class Packet(From: String, To: String, Port: String, Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
   //C&Cサーバからマルウェアに指示を送る通信に見立てたメッセージ
-  final case class Command(From: String, To: String, Port: String, MainRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
+  final case class Command(From: String, To: String, Port: String, MainRef: ActorRef[Message], ModeraotorRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
   //マルウェアがC&Cサーバへ送る窃取した情報に見立てたメッセージ
-  final case class Reply(From: String, To: String, Port: String, MainRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
+  final case class Reply(From: String, To: String, Port: String, MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
   //ACLの追加
   final case class AddACL(PortNumber: String) extends Message
   //ACL一覧を出力
@@ -32,12 +31,18 @@ object Messages{
   final case class ShowLog() extends Message
   //ルータの通信履歴を出力
   final case class ShowAll() extends Message
+  //Receptionアクターを入力待ち状態するメッセージ
+  final case class WaitingForInput(ReceptionRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], CCServerRef: ActorRef[Message]) extends Message
   //演習成功をMainアクターに知らせるメッセージ
-  final case class SuccessExercise(Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
+  final case class SuccessExercise(MainRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
   //時間切れで演習失敗をMainアクターに知らせるメッセージ
-  final case class FailedExercise(Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
+  final case class FailedExercise(MainRef: ActorRef[Message], Client1Ref: ActorRef[Message], Client2Ref: ActorRef[Message], Client3Ref: ActorRef[Message], SwitchRef: ActorRef[Message], RouterRef: ActorRef[Message], FirewallRef: ActorRef[Message], ExternalWebServerRef: ActorRef[Message], CCServerRef: ActorRef[Message], MalwareRef: ActorRef[Message]) extends Message
   //各アクターに停止を伝えるメッセージ
   final case class StopSystem() extends Message
+  //Mainアクターを起動させるメッセージ
+  final case class StartMain(MainRef: ActorRef[Message]) extends  Message
+  //Mainアクターを停止させるメッセージ
+  final case class StopMain() extends Message
 }
 
 
@@ -46,7 +51,7 @@ object ExternalWebServer extends ExternalNetwork {
   val name: String = "WebServer"
   def apply(): Behavior[Message] = Behaviors.receive {(context, message) =>
     message match{
-      case Init(main, client1, client2, client3, switch, router, firewall,externalwebserver, ccserver, malware) => {
+      case Init(main, moderator, reception, client1, client2, client3, switch, router, firewall,externalwebserver, ccserver, malware) => {
         //初期メッセージを受け取ったら自身にパケットを送信するようにメッセージを自己送信する
         externalwebserver ! SendPacket(client1, client2, client3, switch, router, firewall,externalwebserver, ccserver, malware)
         Behaviors.same
@@ -85,39 +90,39 @@ object CCServer{
   val PortNumber = "xxx"
   def apply(): Behavior[Message] = Behaviors.receive { (context, message) =>
     message match {
-      case Init(main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Init(main, moderator, reception, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         //演習開始から1分後に攻撃開始
         try Thread.sleep(60 * 1 * 1000)
         catch {
           case e: InterruptedException =>
             e.printStackTrace()
         }
-        ccserver ! Command(name, InfectedClientName, PortNumber, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+        ccserver ! Command(name, InfectedClientName, PortNumber, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
-      case Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         try Thread.sleep(10 * 1000)
         catch {
           case e: InterruptedException =>
             e.printStackTrace()
         }
         counter += 1
-        firewall ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+        firewall ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
-      case Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         if (counter == 30){
-          main ! FailedExercise(client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+          moderator ! FailedExercise(main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
           Behaviors.same
         }
         else {
           if (ShowLog == true) {
             context.log.info(s"${to} receive packet From:${from} Port:${port}")
-            ccserver ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+            ccserver ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
             Behaviors.same
           }
           else {
-            ccserver ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+            ccserver ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
             Behaviors.same
           }
         }
@@ -149,19 +154,19 @@ object Firewall{
         }
         Behaviors.same
       }
-      case Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         if (AccessControlList.isEmpty) {
-          router ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+          router ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
           Behaviors.same
         }
         else {
           context.log.info("不正な通信を遮断しました")
-          main ! SuccessExercise(client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+          moderator ! SuccessExercise(main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
           Behaviors.same
         }
       }
-      case Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
-        ccserver ! Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+      case Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+        ccserver ! Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
       case AddACL(portnumber) => {
@@ -190,16 +195,16 @@ object Router{
         switch ! Packet(from, to, port, client1, client2, client3, switch, router, firewall,externalwebserver, ccserver, malware)
         Behaviors.same
       }
-      case Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         val Log = (s"From:${from}",s"To:${to}", s"Port:${port}")
         LogList = LogList :+ Log
-        switch ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+        switch ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
-      case Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         val Log = (s"From:${from}", s"To:${to}", s"Port:${port}")
         LogList = LogList :+ Log
-        firewall ! Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+        firewall ! Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
       case ShowAll() => {
@@ -239,12 +244,12 @@ object Switch{
           Behaviors.same
         }
       }
-      case Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
-          client3 ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+      case Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+          client3 ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
           Behaviors.same
       }
-      case Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
-        router ! Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+      case Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+        router ! Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
       case StopSystem() => {
@@ -319,19 +324,19 @@ object Client3 extends InternalNetwork{
           Behaviors.same
         }
       }
-      case Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         if (ShowLog == true) {
           context.log.info(s"${to} receive packet From:${from} Port:${port}")
-          malware ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+          malware ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
           Behaviors.same
         }
         else {
-          malware ! Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+          malware ! Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
           Behaviors.same
         }
       }
-      case Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
-        switch ! Reply(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+      case Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+        switch ! Reply(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
       case ShowLog() => {
@@ -348,14 +353,14 @@ object Client3 extends InternalNetwork{
 object Malware{
   def apply(): Behavior[Message] = Behaviors.receive { (context, message) =>
     message match {
-      case Command(from, to, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Command(from, to, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         //10秒の待ち時間を挿入
         try Thread.sleep(10 * 1000)
         catch {
           case e: InterruptedException =>
             e.printStackTrace()
         }
-        client3 ! Reply(to, from, port, main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
+        client3 ! Reply(to, from, port, main, moderator, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware)
         Behaviors.same
       }
       case StopSystem() => {
@@ -368,7 +373,11 @@ object Malware{
 object Reception {
   def apply(): Behavior[Message] = Behaviors.receive { (context, message) =>
     message match {
-      case Init(main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case Init(main, moderator, reception, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+        reception ! WaitingForInput(reception, client1, client2, client3, router, firewall, ccserver)
+        Behaviors.same
+      }
+      case WaitingForInput(reception, client1, client2, client3, router, firewall, ccserver) => {
         val command = io.StdIn.readLine().split(' ')
         if (command(0) == "AddACL") {
           firewall ! AddACL(command(1))
@@ -388,31 +397,7 @@ object Reception {
         else {
           context.log.info("コマンドが見つかりません")
         }
-        receptionAgain(context, message)
-
-        def receptionAgain(context: ActorContext[Message], message: Message): Behavior[Message] = {
-          val command = io.StdIn.readLine().split(' ')
-          if (command(0) == "AddACL") {
-            firewall ! AddACL(command(1))
-          }
-          else if (command(0) == "ShowACL") {
-            firewall ! ShowACL()
-          }
-          else if (command(0) == "ShowLog") {
-            ccserver ! ShowLog()
-            client1 ! ShowLog()
-            client2 ! ShowLog()
-            client3 ! ShowLog()
-          }
-          else if (command(0) == "ShowAll") {
-            router ! ShowAll()
-          }
-          else {
-            context.log.info("コマンドが見つかりません")
-          }
-          receptionAgain(context, message)
-        }
-
+        reception ! WaitingForInput(reception, client1, client2, client3, router, firewall, ccserver)
         Behaviors.same
       }
       case StopSystem() => {
@@ -422,11 +407,11 @@ object Reception {
   }
 }
 
-object Main extends App {
+object  Moderator {
   def apply(): Behavior[Message] = Behaviors.receive[Message] { (context, message) =>
     message match {
-      case Start(main) => {
-        val RecptionRef = context.spawn(Reception(), "Reception")
+      case Start(main, moderator) => {
+        val ReceptionRef = context.spawn(Reception(), "Reception")
         val Client1Ref = context.spawn(Client1(), "Client1")
         val Client2Ref = context.spawn(Client2(), "Client2")
         val Client3Ref = context.spawn(Client3(), "Client3")
@@ -436,12 +421,12 @@ object Main extends App {
         val ExternalWebServerRef = context.spawn(ExternalWebServer(), "ExternalWebServer")
         val CCServerRef = context.spawn(CCServer(), "CCServer")
         val MalwareRef = context.spawn(Malware(), "Malware")
-        RecptionRef ! Init(main, Client1Ref, Client2Ref, Client3Ref, SwitchRef, RouterRef, FirewallRef, ExternalWebServerRef, CCServerRef, MalwareRef)
-        ExternalWebServerRef ! Init(main, Client1Ref, Client2Ref, Client3Ref, SwitchRef, RouterRef, FirewallRef, ExternalWebServerRef, CCServerRef, MalwareRef)
-        CCServerRef ! Init(main, Client1Ref, Client2Ref, Client3Ref, SwitchRef, RouterRef, FirewallRef, ExternalWebServerRef, CCServerRef, MalwareRef)
+        ReceptionRef ! Init(main, moderator, ReceptionRef, Client1Ref, Client2Ref, Client3Ref, SwitchRef, RouterRef, FirewallRef, ExternalWebServerRef, CCServerRef, MalwareRef)
+        ExternalWebServerRef ! Init(main, moderator, ReceptionRef, Client1Ref, Client2Ref, Client3Ref, SwitchRef, RouterRef, FirewallRef, ExternalWebServerRef, CCServerRef, MalwareRef)
+        CCServerRef ! Init(main, moderator, Client1Ref, ReceptionRef, Client2Ref, Client3Ref, SwitchRef, RouterRef, FirewallRef, ExternalWebServerRef, CCServerRef, MalwareRef)
         Behaviors.same
       }
-      case SuccessExercise(client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case SuccessExercise(main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         client1 ! StopSystem()
         client2 ! StopSystem()
         client3 ! StopSystem()
@@ -452,9 +437,10 @@ object Main extends App {
         ccserver ! StopSystem()
         malware ! StopSystem()
         context.log.info("演習クリアです。おめでとうございます。")
+        main ! StopMain()
         Behaviors.stopped
       }
-      case FailedExercise(client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
+      case FailedExercise(main, client1, client2, client3, switch, router, firewall, externalwebserver, ccserver, malware) => {
         client1 ! StopSystem()
         client2 ! StopSystem()
         client3 ! StopSystem()
@@ -465,12 +451,29 @@ object Main extends App {
         ccserver ! StopSystem()
         malware ! StopSystem()
         context.log.info("時間切れです。もう一度挑戦しましょう。")
+        main ! StopMain()
+        Behaviors.stopped
+      }
+    }
+  }
+}
+
+object Main extends App {
+  def apply(): Behavior[Message] = Behaviors.receive[Message] { (context, message) =>
+    message match {
+      case StartMain(main) => {
+        val moderatorRef: ActorRef[Message] = context.spawn(Moderator(), "moderator")
+        moderatorRef ! Start(main, moderatorRef)
+        Behaviors.same
+      }
+      case StopMain() => {
+        context.log.info("Main関数を停止します")
         Behaviors.stopped
       }
     }
   }
 
-  val mainRef: ActorRef[Message] = ActorSystem(apply, "main")
-  mainRef ! Start(mainRef)
+  val mainRef: ActorRef[Message] = ActorSystem(apply(), "main")
+  mainRef ! StartMain(mainRef)
 }
 
