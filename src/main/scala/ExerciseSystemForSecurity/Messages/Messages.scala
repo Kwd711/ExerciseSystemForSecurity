@@ -1,7 +1,6 @@
 package ExerciseSystemForSecurity.Messages
 
-import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior, Terminated}
+import akka.actor.typed.ActorRef
 
 trait Message
 
@@ -38,4 +37,8 @@ object MessagesProto{
   final case class StartMain(MainRef: ActorRef[Message]) extends  Message
   //Mainアクターを停止させるメッセージ
   final case class StopMain() extends Message
+}
+
+object MessagesFirst{
+
 }

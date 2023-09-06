@@ -1,9 +1,9 @@
 package ExerciseSystemForSecurity.Proto
 
-import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior, Terminated}
 import ExerciseSystemForSecurity.Messages.Message
 import ExerciseSystemForSecurity.Messages.MessagesProto._
+import akka.actor.typed.Behavior
+import akka.actor.typed.scaladsl.Behaviors
 
 import scala.util.Random
 
@@ -369,7 +369,6 @@ object Reception {
     }
   }
 }
-
 object  ModeratorProto {
   def apply(): Behavior[Message] = Behaviors.receive[Message] { (context, message) =>
     message match {
