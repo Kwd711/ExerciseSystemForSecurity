@@ -1,4 +1,4 @@
-package ExerciseSystemForSecurity.Proto
+package ExerciseSystemForSecurity.Scenario.Proto
 
 import ExerciseSystemForSecurity.Messages.Message
 import ExerciseSystemForSecurity.Messages.MessagesProto._

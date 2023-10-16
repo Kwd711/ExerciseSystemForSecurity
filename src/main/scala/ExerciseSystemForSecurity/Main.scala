@@ -2,8 +2,9 @@ package ExerciseSystemForSecurity
 
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior, Terminated}
-import ExerciseSystemForSecurity.Proto.ModeratorProto
 import ExerciseSystemForSecurity.Messages._
+import ExerciseSystemForSecurity.Scenario.Proto.ModeratorProto
+import ExerciseSystemForSecurity.Scenario.First.ModeratorFirst
 
 
 object Main extends App {
@@ -15,13 +16,33 @@ object Main extends App {
         Behaviors.same
       }
       case MessagesProto.StopMain() => {
-        context.log.info("Main関数を停止します")
+        println("Main関数を停止します")
+        Behaviors.stopped
+      }
+      case MessagesFirst.StartMain(main) => {
+        val moderatorRef: ActorRef[Message] = context.spawn(ModeratorFirst(), "moderator")
+        moderatorRef ! MessagesFirst.Start(main, moderatorRef)
+        Behaviors.same
+      }
+      case MessagesFirst.StopMain() => {
+        println("Main関数を停止します")
         Behaviors.stopped
       }
     }
   }
 
   val mainRef: ActorRef[Message] = ActorSystem(apply(), "main")
-  mainRef ! MessagesProto.StartMain(mainRef)
+  println("protoかfirstを選んでください")
+  val selectScenario = io.StdIn.readLine()
+  if (selectScenario == "proto") {
+    mainRef ! MessagesProto.StartMain(mainRef)
+  }
+  else if (selectScenario == "first") {
+    mainRef ! MessagesFirst.StartMain(mainRef)
+  }
+  else {
+    println("不正な入力です。もう一度入力してください")
+  }
+
 }
 
