@@ -32,17 +32,17 @@ object Main extends App {
   }
 
   val mainRef: ActorRef[Message] = ActorSystem(apply(), "main")
-  println("protoかfirstを選んでください")
-  val selectScenario = io.StdIn.readLine()
-  if (selectScenario == "proto") {
-    mainRef ! MessagesProto.StartMain(mainRef)
-  }
-  else if (selectScenario == "first") {
-    mainRef ! MessagesFirst.StartMain(mainRef)
-  }
-  else {
-    println("不正な入力です。もう一度入力してください")
-  }
-
+  //println("protoかfirstを選んでください")
+  //val selectScenario = io.StdIn.readLine()
+  //if (selectScenario == "proto") {
+  //  mainRef ! MessagesProto.StartMain(mainRef)
+  //}
+  //else if (selectScenario == "first") {
+  //  mainRef ! MessagesFirst.StartMain(mainRef)
+  //}
+  //else {
+  //  println("不正な入力です。もう一度入力してください")
+  //}
+  mainRef ! MessagesFirst.StartMain(mainRef)
 }
 

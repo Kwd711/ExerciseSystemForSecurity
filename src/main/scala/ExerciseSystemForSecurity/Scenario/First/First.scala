@@ -150,7 +150,7 @@ object Reception {
           case "run" => {
             user ! SendPacket(main, moderator, reception, user, proxy, firewall, result)
           }
-          case "filtering" => {
+          case "addrule" => {
             firewall ! AddRule(main, moderator, reception, user, proxy, firewall, result)
           }
           case "authfunc" => {
@@ -194,12 +194,13 @@ object ModeratorFirst{
         step match {
           case 0 => {
             step = 1
+            NetworkAA()
             println("まずはrunコマンドを使って通信状況を確認してみましょう(ログを20個出力すると自動的に停止します)")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 1 => {
             step = 2
-            println("\nプロキシサーバ経由せずに直接外部とやりとりしている通信が存在するようです。\nfilteringコマンドで送信元がプロキシサーバでない通信を遮断するフィルタリングルールを追加しましょう")
+            println("\nプロキシサーバ経由せずに直接外部とやりとりしている通信が存在するようです。\naddruleコマンドで送信元がプロキシサーバでない通信を遮断するフィルタリングルールを追加しましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 2 => {
@@ -210,6 +211,7 @@ object ModeratorFirst{
               case e: InterruptedException =>
                 e.printStackTrace()
             }
+            NetworkAA()
             println("runコマンドで再び通信状況を確認してみましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
@@ -226,6 +228,7 @@ object ModeratorFirst{
               case e: InterruptedException =>
                 e.printStackTrace()
             }
+            NetworkAA()
             println("runコマンドで再び通信状況を確認してみましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
@@ -242,6 +245,7 @@ object ModeratorFirst{
               case e: InterruptedException =>
                 e.printStackTrace()
             }
+            NetworkAA()
             println("runコマンドで再び通信状況を確認してみましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
@@ -261,5 +265,63 @@ object ModeratorFirst{
         Behaviors.stopped
       }
     }
+  }
+
+  def NetworkAA() : Unit = {
+    println("<現在のネットワーク図>")
+    println("                                   Internet　　　　　　　　　　　　　　　　　 　　　　　　")
+    println("                                       ↑　　　　　　　　　　　　　　　　　 　　　　　　　　")
+    println("                                       |                                         ")
+    println("--------------------------------------------------------------------------------")
+    println("|                                  Firewall                                    |")
+    Firewall.filtering match {
+      case 0 => {
+        println("|                            フィルタリングルール:未設定                            |")
+        println("--------------------------------------------------------------------------------")
+        println("                                       ↑　　　　　　　　　　　　　　　　　↑　　　　　　　　")
+        println("                                       |                           |             ")
+        println("                                       |                           |             ")
+        println("                                       |                           |             ")
+        println("                                       |                           |            ")
+        println("              －－－－－－－－－－－－－－－-                            |            ")
+        println("              | －－－－－－－－－－－－－－－－－－－－－－－－－－－        |             ")
+        println("              | |                                         |        |             ")
+        println("              | |                                         |        |            ")
+        println("              | ↓                                         |     　　|            ")
+      }
+      case 1 => {
+        println("|                   フィルタリングルール:送信元がProxyの通信のみ許可                   |")
+        println("--------------------------------------------------------------------------------")
+        println("                                       ↑　　　　　　　　　　　　　　　　　 　　　　　　　　")
+        println("                                       |                                         ")
+        println("                                       |                                         ")
+        println("                                       |                                         ")
+        println("                                       |                                        ")
+        println("              －－－－－－－－－－－－－－－-                                         ")
+        println("              | －－－－－－－－－－－－－－－－－－－－－－－－－－－                      ")
+        println("              | |                                         |                      ")
+        println("              | |                                         |                     ")
+        println("              | ↓                                         |     　　             ")
+      }
+    }
+    println("         ----------------                              --------------------      ")
+    println("        |     Proxy     |                              |                  |      ")
+    Proxy.authfunc match {
+      case 0 => {
+        println("        | 認証機能：無効   |                              |       User       |      ")
+      }
+      case 1 => {
+        println("        | 認証機能：有効   |                              |       User       |      ")
+      }
+    }
+    Proxy.acl match {
+      case 0 => {
+        println("        | ACL:未設定     |                              |                  |      ")
+      }
+      case 1 => {
+        println("        | ACL:80, 443   |                              |                  |      ")
+      }
+    }
+    println("         ----------------                              --------------------      ")
   }
 }
