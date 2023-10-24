@@ -1,7 +1,8 @@
 package ExerciseSystemForSecurity.Scenario.First
 
 import ExerciseSystemForSecurity.Messages.Message
-import ExerciseSystemForSecurity.Messages.MessagesFirst.{FailedExercise, Init, Start, StopMain, StopSystem, SuccessExercise, WaitingForInput, NextStep, SendPacket, Packet, AddRule, AuthOn, AddACL}
+import ExerciseSystemForSecurity.Messages.MessagesFirst.{AddACL, AddRule, AuthOn, FailedExercise, Init, NextStep, Packet, SendPacket, Start, StopMain, StopSystem, SuccessExercise, WaitingForInput}
+import ExerciseSystemForSecurity.Scenario.First.ModeratorFirst.{NetworkAA, step}
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 
@@ -147,7 +148,11 @@ object Reception {
       case WaitingForInput(main, moderator, reception, user, proxy, firewall, result) => {
         val command = io.StdIn.readLine()
         command match {
+          case "start" => {
+            moderator ! NextStep(main, moderator, reception, user, proxy, firewall, result)
+          }
           case "run" => {
+            NetworkAA(step)
             user ! SendPacket(main, moderator, reception, user, proxy, firewall, result)
           }
           case "addrule" => {
@@ -194,62 +199,73 @@ object ModeratorFirst{
         step match {
           case 0 => {
             step = 1
-            NetworkAA()
-            println("まずはrunコマンドを使って通信状況を確認してみましょう(ログを20個出力すると自動的に停止します)")
+            println("近年脅威を増してきている高度標的型攻撃では")
+            println("\n1.偵察\n2.武器化\n3.配送\n4.攻撃\n5.インストール\n6.遠隔操作\n7.目的実行")
+            println("\nの7段階を経て行われるとされています。")
+            println("")
+            println("このうち1~5までは手口の変化が激しく、その全てに対応することが難しくなっています。")
+            println("しかし、6の遠隔操作の段階で行われる基盤構築や内部調査の手法はそれほど変化が大きくなく、対策の有効性が継続しやすい部分になります。")
+            println("")
+            println("そこで高度標的型攻撃への対応策としては攻撃者に侵入されることを防ぐことを目的とした「入口対策」以上に\n侵入拡大を防ぐことを目的とした「内部対策」を充実させることが重要となっています。")
+            println("今回の演習ではその内部対策の一例としてファイアウォールやプロキシサーバの機能を用いてリモートコントロール通信経路の確立を防ぐ演習に取り組んでもらいます。")
+            println("")
+            println("それではstartコマンドを入力して演習を始めてください。")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 1 => {
             step = 2
-            println("\nプロキシサーバ経由せずに直接外部とやりとりしている通信が存在するようです。\naddruleコマンドで送信元がプロキシサーバでない通信を遮断するフィルタリングルールを追加しましょう")
+            println("まずはrunコマンドを使って通信状況を確認してみましょう(ログを20個出力すると自動的に停止します)")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 2 => {
             step = 3
-            //1秒の待ち時間を挿入
-            try Thread.sleep(1 * 1000)
-            catch {
-              case e: InterruptedException =>
-                e.printStackTrace()
-            }
-            NetworkAA()
-            println("runコマンドで再び通信状況を確認してみましょう")
+            println("\nプロキシサーバ経由せずに直接外部とやりとりしている通信が存在するようです。\naddruleコマンドで送信元がプロキシサーバでない通信を遮断するフィルタリングルールを追加しましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 3 => {
             step = 4
-            println("\nプロキシサーバを経由しない通信の遮断に成功しました。しかし、認証情報を持たない通信がプロキシサーバを通過しているようです。\nauthfuncコマンドでプロキシサーバの認証機能を有効化しましょう")
+            //1秒の待ち時間を挿入
+            try Thread.sleep(1 * 1000)
+            catch {
+              case e: InterruptedException =>
+                e.printStackTrace()
+            }
+            println("runコマンドで再び通信状況を確認してみましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 4 => {
             step = 5
-            //1秒の待ち時間を挿入
-            try Thread.sleep(1 * 1000)
-            catch {
-              case e: InterruptedException =>
-                e.printStackTrace()
-            }
-            NetworkAA()
-            println("runコマンドで再び通信状況を確認してみましょう")
+            println("\nプロキシサーバを経由しない通信の遮断に成功しました。しかし、認証情報を持たない通信がプロキシサーバを通過しているようです。\nauthfuncコマンドでプロキシサーバの認証機能を有効化しましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 5 => {
             step = 6
-            println("\n認証情報を持たない通信の遮断に成功しました。しかし、HTTP通信で用いられる80番ポートやHTTPS通信で用いられる443番ポート以外を使用する不審な通信があるようです。\naddaclコマンドで80番ポートと443番ポート以外を使用する通信を禁止するアクセスコントロールリスト(ACL)をプロキシサーバに追加しましょう。")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
-          }
-          case 6 => {
-            step = 7
             //1秒の待ち時間を挿入
             try Thread.sleep(1 * 1000)
             catch {
               case e: InterruptedException =>
                 e.printStackTrace()
             }
-            NetworkAA()
             println("runコマンドで再び通信状況を確認してみましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
+          case 6 => {
+            step = 7
+            println("\n認証情報を持たない通信の遮断に成功しました。しかし、HTTP通信で用いられる80番ポートやHTTPS通信で用いられる443番ポート以外を使用する不審な通信があるようです。\naddaclコマンドで80番ポートと443番ポート以外を使用する通信を禁止するアクセスコントロールリスト(ACL)をプロキシサーバに追加しましょう。")
+            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+          }
           case 7 => {
+            step = 8
+            //1秒の待ち時間を挿入
+            try Thread.sleep(1 * 1000)
+            catch {
+              case e: InterruptedException =>
+                e.printStackTrace()
+            }
+            println("runコマンドで再び通信状況を確認してみましょう")
+            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+          }
+          case 8 => {
             moderator ! SuccessExercise(main, user, proxy, firewall, result)
           }
         }
@@ -267,61 +283,110 @@ object ModeratorFirst{
     }
   }
 
-  def NetworkAA() : Unit = {
-    println("<現在のネットワーク図>")
-    println("                                   Internet　　　　　　　　　　　　　　　　　 　　　　　　")
-    println("                                       ↑　　　　　　　　　　　　　　　　　 　　　　　　　　")
-    println("                                       |                                         ")
-    println("--------------------------------------------------------------------------------")
-    println("|                                  Firewall                                    |")
-    Firewall.filtering match {
-      case 0 => {
-        println("|                            フィルタリングルール:未設定                            |")
-        println("--------------------------------------------------------------------------------")
-        println("                                       ↑　　　　　　　　　　　　　　　　　↑　　　　　　　　")
-        println("                                       |                           |             ")
-        println("                                       |                           |             ")
-        println("                                       |                           |             ")
-        println("                                       |                           |            ")
-        println("              －－－－－－－－－－－－－－－-                            |            ")
-        println("              | －－－－－－－－－－－－－－－－－－－－－－－－－－－        |             ")
-        println("              | |                                         |        |             ")
-        println("              | |                                         |        |            ")
-        println("              | ↓                                         |     　　|            ")
+  def NetworkAA(step : Int) : Unit = {
+    step match {
+      case 2 => {
+        println("<現在のネットワーク図>")
+        println("                 Internet　　　　　　　　　     ")
+        println("                     ↑　　　　　　　　　　　     ")
+        println("                     |                       ")
+        println("-------------------------------------------  ")
+        println("|                 Firewall                 | ")
+        println("|          フィルタリングルール:未設定          | ")
+        println("-------------------------------------------")
+        println("                    ↑　　　　　　　　　　↑　　　　 ")
+        println("                    |                |       ")
+        println("                    |                |       ")
+        println("                    |                |       ")
+        println("                    |                |       ")
+        println("        －－－－－－－-                 |       ")
+        println("        | －－－－－－－－－－－－－－－   |       ")
+        println("        | |                      |   |       ")
+        println("        | |                      |   |       ")
+        println("        | ↓                      |   |  　　  ")
+        println(" ----------------         --------------------")
+        println(" |     Proxy     |        |                  |")
+        println(" | 認証機能：無効   |        |       User       |")
+        println(" | ACL:未設定     |        |                  |")
+        println(" ----------------         --------------------")
       }
-      case 1 => {
-        println("|                   フィルタリングルール:送信元がProxyの通信のみ許可                   |")
-        println("--------------------------------------------------------------------------------")
-        println("                                       ↑　　　　　　　　　　　　　　　　　 　　　　　　　　")
-        println("                                       |                                         ")
-        println("                                       |                                         ")
-        println("                                       |                                         ")
-        println("                                       |                                        ")
-        println("              －－－－－－－－－－－－－－－-                                         ")
-        println("              | －－－－－－－－－－－－－－－－－－－－－－－－－－－                      ")
-        println("              | |                                         |                      ")
-        println("              | |                                         |                     ")
-        println("              | ↓                                         |     　　             ")
+      case 4 => {
+        println("<現在のネットワーク図>")
+        println("                 Internet　　　　　　　　　                                            Internet　　　　　　　　　     ")
+        println("                     ↑　　　　　　　　　　　                                                ↑　　　　　　　　　　　     ")
+        println("                     |                                                                  |                       ")
+        println("-------------------------------------------                        -------------------------------------------  ")
+        println("|                 Firewall                 |                       |                 Firewall                 | ")
+        println("|          フィルタリングルール:未設定          |                       | フィルタリングルール:送信元がProxyの通信のみ許可  | ")
+        println("-------------------------------------------                        -------------------------------------------")
+        println("                    ↑　　　　　　　　　　↑　　　　                                          ↑　　　　　　　　　　　　　　 ")
+        println("                    |                |                                                |                       ")
+        println("                    |                |                                                |                       ")
+        println("                    |                |                      ＼                        |                       ")
+        println("                    |                |       ----------------  ＼                     |                       ")
+        println("        －－－－－－－                  |       ----------------  ／         －－－－－－－-                       ")
+        println("        | －－－－－－－－－－－－－－－   |                       ／           | －－－－－－－－－－－－－－－          ")
+        println("        | |                      |   |                                    | |                      |          ")
+        println("        | |                      |   |                                    | |                      |          ")
+        println("        | ↓                      |   |  　　                               | ↓                      |     　　  ")
+        println(" ----------------         --------------------                      ----------------         --------------------")
+        println(" |     Proxy     |        |                  |                      |     Proxy     |        |                  |")
+        println(" | 認証機能：無効   |        |       User       |                      | 認証機能：無効  |         |       User       |")
+        println(" | ACL:未設定     |        |                  |                      | ACL:未設定     |         |                  |")
+        println(" ----------------         --------------------                      ----------------         --------------------")
+      }
+      case 6 => {
+        println("<現在のネットワーク図>")
+        println("                 Internet　　　　　　　　　                                            Internet　　　　　　　　　     ")
+        println("                     ↑　　　　　　　　　　　                                                ↑　　　　　　　　　　　     ")
+        println("                     |                                                                  |                       ")
+        println("-------------------------------------------                        -------------------------------------------  ")
+        println("|                 Firewall                 |                       |                 Firewall                 | ")
+        println("| フィルタリングルール:送信元がProxyの通信のみ許可  |                      | フィルタリングルール:送信元がProxyの通信のみ許可  | ")
+        println("-------------------------------------------                        -------------------------------------------")
+        println("                    ↑　　　　　　　　　　 　　　　                                          ↑　　　　　　　　　　　　　　 ")
+        println("                    |                                                                 |                       ")
+        println("                    |                                                                 |                       ")
+        println("                    |                                       ＼                        |                       ")
+        println("                    |                        ----------------  ＼                     |                       ")
+        println("        －－－－－－－                          ----------------  ／         －－－－－－－-                       ")
+        println("        | －－－－－－－－－－－－－－－                           ／           | －－－－－－－－－－－－－－－          ")
+        println("        | |                      |                                        | |                      |          ")
+        println("        | |                      |                                        | |                      |          ")
+        println("        | ↓                      |      　　                               | ↓                      |     　　  ")
+        println(" ----------------         --------------------                      ----------------         --------------------")
+        println(" |     Proxy     |        |                  |                      |     Proxy     |        |                  |")
+        println(" | 認証機能：無効   |        |       User       |                      | 認証機能：有効  |         |       User       |")
+        println(" | ACL:未設定     |        |                  |                      | ACL:未設定     |         |                  |")
+        println(" ----------------         --------------------                      ----------------         --------------------")
+
+      }
+      case 8 => {
+        println("<現在のネットワーク図>")
+        println("                 Internet　　　　　　　　　                                            Internet　　　　　　　　　     ")
+        println("                     ↑　　　　　　　　　　　                                                ↑　　　　　　　　　　　     ")
+        println("                     |                                                                  |                       ")
+        println("-------------------------------------------                        -------------------------------------------  ")
+        println("|                 Firewall                 |                       |                 Firewall                 | ")
+        println("| フィルタリングルール:送信元がProxyの通信のみ許可  |                      | フィルタリングルール:送信元がProxyの通信のみ許可  | ")
+        println("-------------------------------------------                        -------------------------------------------")
+        println("                    ↑　　　　　　　　　　 　　　　                                          ↑　　　　　　　　　　　　　　 ")
+        println("                    |                                                                 |                       ")
+        println("                    |                                                                 |                       ")
+        println("                    |                                       ＼                        |                       ")
+        println("                    |                        ----------------  ＼                     |                       ")
+        println("        －－－－－－－                          ----------------  ／         －－－－－－－-                       ")
+        println("        | －－－－－－－－－－－－－－－                           ／           | －－－－－－－－－－－－－－－          ")
+        println("        | |                      |                                        | |                      |          ")
+        println("        | |                      |                                        | |                      |          ")
+        println("        | ↓                      |      　　                               | ↓                      |     　　  ")
+        println(" ----------------         --------------------                      ----------------         --------------------")
+        println(" |     Proxy     |        |                  |                      |     Proxy     |        |                  |")
+        println(" | 認証機能：有効   |        |       User       |                      | 認証機能：有効  |         |       User       |")
+        println(" | ACL:未設定     |        |                  |                      | ACL:80, 443   |         |                  |")
+        println(" ----------------         --------------------                      ----------------         --------------------")
+
       }
     }
-    println("         ----------------                              --------------------      ")
-    println("        |     Proxy     |                              |                  |      ")
-    Proxy.authfunc match {
-      case 0 => {
-        println("        | 認証機能：無効   |                              |       User       |      ")
-      }
-      case 1 => {
-        println("        | 認証機能：有効   |                              |       User       |      ")
-      }
     }
-    Proxy.acl match {
-      case 0 => {
-        println("        | ACL:未設定     |                              |                  |      ")
-      }
-      case 1 => {
-        println("        | ACL:80, 443   |                              |                  |      ")
-      }
-    }
-    println("         ----------------                              --------------------      ")
   }
-}
