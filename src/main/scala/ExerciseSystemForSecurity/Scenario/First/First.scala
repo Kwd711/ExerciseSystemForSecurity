@@ -222,7 +222,7 @@ object ModeratorFirst{
           }
           case 2 => {
             step = 3
-            println("\nプロキシサーバ経由せずに直接外部とやりとりしている通信が存在するようです。\naddruleコマンドで送信元がプロキシサーバでない通信を遮断するフィルタリングルールを追加しましょう")
+            println("\nプロキシサーバ経由せずに直接外部とやりとりしている通信が存在するようです。\nマルウェアの52%がプロキシを経由せずに攻撃者と直接通信しようとする傾向にあり、ユーザ端末が外部ネットワークと直接通信を行うこと制限するだけで約半数のマルウェアの通信を防ぐことができます。\naddruleコマンドで送信元がプロキシサーバでない通信を遮断するフィルタリングルールを追加しましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 3 => {
@@ -238,7 +238,7 @@ object ModeratorFirst{
           }
           case 4 => {
             step = 5
-            println("\nプロキシサーバを経由しない通信の遮断に成功しました。しかし、認証情報を持たない通信がプロキシサーバを通過しているようです。\nauthfuncコマンドでプロキシサーバの認証機能を有効化しましょう")
+            println("\nプロキシサーバを経由しない通信の遮断に成功しました。しかし、認証情報を持たない通信がプロキシサーバを通過しているようです。\n27%のマルウェアは認証機能のあるプロキシに対応していません。\nauthfuncコマンドでプロキシサーバの認証機能を有効化し、認証機能に未対応のマルウェアの通信を防ぎましょう")
             reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 5 => {
