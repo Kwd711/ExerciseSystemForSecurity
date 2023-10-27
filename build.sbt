@@ -12,6 +12,9 @@ lazy val akkaVersion = "2.7.0"
 // sbt tasks, consider https://github.com/spray/sbt-revolver/
 fork := true
 
+//下のが無いとIntelliJのターミナル以外で標準入力が受け取れないので注意
+connectInput := true
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "ch.qos.logback" % "logback-classic" % "1.2.11",
