@@ -10,7 +10,7 @@ import ExerciseSystemForSecurity.Scenario.First.ModeratorFirst
 object Main extends App {
   def apply(): Behavior[Message] = Behaviors.receive[Message] { (context, message) =>
     message match {
-      case MessagesProto.StartMain(main) => {
+      case MessagesProto.StartModerator(main) => {
         val moderatorRef: ActorRef[Message] = context.spawn(ModeratorProto(), "moderator")
         moderatorRef ! MessagesProto.Start(main, moderatorRef)
         Behaviors.same
@@ -19,7 +19,7 @@ object Main extends App {
         println("Main関数を停止します")
         Behaviors.stopped
       }
-      case MessagesFirst.StartMain(main) => {
+      case MessagesFirst.StartModerator(main) => {
         val moderatorRef: ActorRef[Message] = context.spawn(ModeratorFirst(), "moderator")
         moderatorRef ! MessagesFirst.Start(main, moderatorRef)
         Behaviors.same
@@ -35,14 +35,14 @@ object Main extends App {
   //println("protoかfirstを選んでください")
   //val selectScenario = io.StdIn.readLine()
   //if (selectScenario == "proto") {
-  //  mainRef ! MessagesProto.StartMain(mainRef)
+  //  mainRef ! MessagesProto.StartModerator(mainRef)
   //}
   //else if (selectScenario == "first") {
-  //  mainRef ! MessagesFirst.StartMain(mainRef)
+  //  mainRef ! MessagesFirst.StartModerator(mainRef)
   //}
   //else {
   //  println("不正な入力です。もう一度入力してください")
   //}
-  mainRef ! MessagesFirst.StartMain(mainRef)
+  mainRef ! MessagesFirst.StartModerator(mainRef)
 }
 

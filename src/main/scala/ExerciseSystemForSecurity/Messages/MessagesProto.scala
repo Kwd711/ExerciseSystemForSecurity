@@ -4,7 +4,7 @@ import akka.actor.typed.ActorRef
 
 object MessagesProto{
   //Mainアクターを起動させるメッセージ
-  final case class StartMain(MainRef: ActorRef[Message]) extends Message
+  final case class StartModerator(MainRef: ActorRef[Message]) extends Message
   //Mainアクターに最初に送るメッセージ
   final case class Start(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message]) extends Message
   //各アクターに初期情報を送るメッセージ

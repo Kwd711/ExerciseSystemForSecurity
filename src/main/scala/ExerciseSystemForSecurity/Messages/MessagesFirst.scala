@@ -3,10 +3,10 @@ package ExerciseSystemForSecurity.Messages
 import akka.actor.typed.ActorRef
 
 object MessagesFirst{
-  //Mainアクターを起動させるメッセージ
-  final case class StartMain(MainRef: ActorRef[Message]) extends Message
+  //Moderatorアクターを起動させるメッセージ
+  final case class StartModerator(MainRef: ActorRef[Message]) extends Message
 
-  //Mainアクターに最初に送るメッセージ
+  //Moderatorアクターに最初に送るメッセージ
   final case class Start(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message]) extends Message
 
   //各アクターに初期情報を送るメッセージ
@@ -22,7 +22,7 @@ object MessagesFirst{
   final case class Packet(from: String, Auth: String, Port: String, SuccessOrFailure: String, FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
 
   //Receptionアクターを入力待ち状態するメッセージ
-  final case class WaitingForInput(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message], ReceptionRef: ActorRef[Message], UserRef: ActorRef[Message], ProxyRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
+  final case class WaitingInput(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message], ReceptionRef: ActorRef[Message], UserRef: ActorRef[Message], ProxyRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
 
   //Firewallにフィルタリングルールを追加するメッセージ
   final case class AddRule(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message], ReceptionRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
@@ -37,7 +37,7 @@ object MessagesFirst{
   final case class SuccessExercise(MainRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
 
   //時間切れで演習失敗をMainアクターに知らせるメッセージ
-  final case class FailedExercise(MainRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
+  //final case class FailedExercise(MainRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
 
   //各アクターに停止を伝えるメッセージ
   final case class StopSystem() extends Message

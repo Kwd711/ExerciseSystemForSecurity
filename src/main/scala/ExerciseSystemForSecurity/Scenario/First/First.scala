@@ -1,7 +1,7 @@
 package ExerciseSystemForSecurity.Scenario.First
 
 import ExerciseSystemForSecurity.Messages.Message
-import ExerciseSystemForSecurity.Messages.MessagesFirst.{AddACL, AddRule, AuthOn, FailedExercise, Init, NextStep, Packet, SendPacket, Start, StopMain, StopSystem, SuccessExercise, WaitingForInput}
+import ExerciseSystemForSecurity.Messages.MessagesFirst.{AddACL, AddRule, AuthOn, FailedExercise, Init, NextStep, Packet, SendPacket, Start, StopMain, StopSystem, SuccessExercise, WaitingInput}
 import ExerciseSystemForSecurity.Scenario.First.ModeratorFirst.{NetworkAA, step}
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
@@ -145,7 +145,7 @@ object User{
 object Reception {
   def apply(): Behavior[Message] = Behaviors.receive[Message] { (context, messege) =>
     messege match {
-      case WaitingForInput(main, moderator, reception, user, proxy, firewall, result) => {
+      case WaitingInput(main, moderator, reception, user, proxy, firewall, result) => {
         io.StdIn.readLine() match {
           case "start" => {
             moderator ! NextStep(main, moderator, reception, user, proxy, firewall, result)
@@ -169,7 +169,7 @@ object Reception {
           case _ => {
             //println(command)
             println("操作可能なコマンドではありません。もう一度入力してください")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
         }
         Behaviors.same
@@ -216,17 +216,17 @@ object ModeratorFirst{
             println("今回の演習ではその内部対策の一例としてファイアウォールやプロキシサーバの機能を用いてリモートコントロール通信経路の確立を防ぐ演習に取り組んでもらいます。")
             println("")
             println("それではstartコマンドを入力して演習を始めてください。")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 1 => {
             step += 1
             println("まずはrunコマンドを使って通信状況を確認してみましょう(ログを20個出力すると自動的に停止します)")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 2 => {
             step += 1
             println("\nプロキシサーバ経由せずに直接外部とやりとりしている通信が存在するようです。\nマルウェアの52%がプロキシを経由せずに攻撃者と直接通信しようとする傾向にあり、ユーザ端末が外部ネットワークと直接通信を行うこと制限するだけで約半数のマルウェアの通信を防ぐことができます。\naddruleコマンドで送信元がプロキシサーバでない通信を遮断するフィルタリングルールを追加しましょう")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 3 => {
             step += 1
@@ -237,12 +237,12 @@ object ModeratorFirst{
                 e.printStackTrace()
             }
             println("runコマンドで再び通信状況を確認してみましょう")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 4 => {
             step += 1
             println("\nプロキシサーバを経由しない通信の遮断に成功しました。しかし、認証情報を持たない通信がプロキシサーバを通過しているようです。\n27%のマルウェアは認証機能のあるプロキシに対応していません。\nauthfuncコマンドでプロキシサーバの認証機能を有効化し、認証機能に未対応のマルウェアの通信を防ぎましょう")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 5 => {
             step += 1
@@ -253,12 +253,12 @@ object ModeratorFirst{
                 e.printStackTrace()
             }
             println("runコマンドで再び通信状況を確認してみましょう")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 6 => {
             step += 1
             println("\n認証情報を持たない通信の遮断に成功しました。しかし、HTTP通信で用いられる80番ポートやHTTPS通信で用いられる443番ポート以外を使用する不審な通信があるようです。\naddaclコマンドで80番ポートと443番ポート以外を使用する通信を禁止するアクセスコントロールリスト(ACL)をプロキシサーバに追加しましょう。")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 7 => {
             step  += 1
@@ -269,7 +269,7 @@ object ModeratorFirst{
                 e.printStackTrace()
             }
             println("runコマンドで再び通信状況を確認してみましょう")
-            reception ! WaitingForInput(main, moderator, reception, user, proxy, firewall, result)
+            reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 8 => {
             moderator ! SuccessExercise(main, user, proxy, firewall, result)
