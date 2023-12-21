@@ -1,7 +1,7 @@
 package ExerciseSystemForSecurity.Scenario.First
 
 import ExerciseSystemForSecurity.Messages.Message
-import ExerciseSystemForSecurity.Messages.MessagesFirst.{AddACL, AddRule, AuthOn, FailedExercise, Init, NextStep, Packet, SendPacket, Start, StopMain, StopSystem, SuccessExercise, WaitingInput}
+import ExerciseSystemForSecurity.Messages.MessagesFirst.{AddACL, AddRule, AuthOn, Init, NextStep, Packet, SendPacket, Start, StopMain, StopSystem, SuccessExercise, WaitingInput}
 import ExerciseSystemForSecurity.Scenario.First.ModeratorFirst.{NetworkAA, step}
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
