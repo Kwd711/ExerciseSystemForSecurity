@@ -34,7 +34,7 @@ object MessagesFirst{
   final case class AddACL(MainRef: ActorRef[Message], ModeratorRef: ActorRef[Message], ReceptionRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
 
   //演習成功をMainアクターに知らせるメッセージ
-  final case class SuccessExercise(MainRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
+  final case class SuccessExercise(MainRef: ActorRef[Message], ReceptionRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message
 
   //時間切れで演習失敗をMainアクターに知らせるメッセージ
   //final case class FailedExercise(MainRef: ActorRef[Message], UserRef: ActorRef[Message], ProxywallRef: ActorRef[Message], FirewallRef: ActorRef[Message], ResultRef: ActorRef[Message]) extends Message

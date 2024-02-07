@@ -272,12 +272,13 @@ object ModeratorFirst{
             reception ! WaitingInput(main, moderator, reception, user, proxy, firewall, result)
           }
           case 8 => {
-            moderator ! SuccessExercise(main, user, proxy, firewall, result)
+            moderator ! SuccessExercise(main, reception, user, proxy, firewall, result)
           }
         }
         Behaviors.same
       }
-      case SuccessExercise(main, user, proxy, firewall, result) => {
+      case SuccessExercise(main, reception, user, proxy, firewall, result) => {
+        reception ! StopSystem()
         user ! StopSystem()
         proxy ! StopSystem()
         firewall ! StopSystem()
